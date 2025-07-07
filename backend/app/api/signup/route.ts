@@ -1,26 +1,19 @@
 // app/api/register/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { registerSchema } from "@/lib/validators/registerSchema";
 import bcrypt from "bcrypt";
-import { z } from "zod";
 
-// Schema ตรวจสอบ input
-const RegisterSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+
 
 export async function POST(req: NextRequest) {
   const data = await req.json();
     
-  try {
-    // ✅ Validate input ด้วย Zod
-    const parsed = RegisterSchema.parse(data);
+    const parsed = registerSchema.parse(data);
     const { email, password } = parsed;
     const client = await clientPromise;
-    const db = client.db("cyber_web_backend");
+    const db = client.db(process.env.MONGODB_DB);
     const users = db.collection("Users");
-    console.log('Registering user:', email);
     // ✅ ตรวจสอบว่า email ซ้ำหรือไม่
     const existing = await users.findOne({ email });
     if (existing) {
@@ -29,6 +22,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+  try {
 
     // ✅ เข้ารหัส password
     const hashedPassword = await bcrypt.hash(password, 10);
