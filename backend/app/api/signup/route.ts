@@ -5,6 +5,7 @@ import clientPromise from '@/lib/mongodb'
 import { registerSchema } from '@/lib/validators/registerSchema'
 import bcrypt from 'bcrypt'
 import { withCORS } from '@/lib/cors'
+import { v4 as uuidv4 } from 'uuid'
 
 // ✅ ตั้งค่าตรง origin ที่คุณอนุญาต (เช่นเฉพาะ frontend localhost)
 export function OPTIONS() {
@@ -17,13 +18,13 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
     const parsed = registerSchema.parse(data)
-    const { email, password } = parsed
+    const { email, password, accountType } = parsed
 
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
     const users = db.collection('Users')
 
-    const existing = await users.findOne({ email })
+    const existing = await users.findOne({ email:email.toLowerCase() })
     if (existing) {
       return withCORS(NextResponse.json(
         { error: 'Email already registered' },
@@ -34,10 +35,11 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const newUser = {
-      email,
+      userId: uuidv4(),
+      email:email.toLowerCase(),
       password: hashedPassword,
       createdAt: new Date(),
-      accountType: 'user'
+      accountType: accountType
     }
 
     const result = await users.insertOne(newUser)
