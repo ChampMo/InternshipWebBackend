@@ -7,7 +7,7 @@ export function OPTIONS() {
 }
 
 export async function PUT(req: NextRequest) {
-  const { userId } = await req.json()
+  const { userId, roleName } = await req.json()
   
   if (!userId) {
     return withCORS(NextResponse.json({ message: 'User ID is required' }, { status: 400 }))
@@ -21,12 +21,12 @@ export async function PUT(req: NextRequest) {
   if (!user) {
     return withCORS(NextResponse.json({ message: 'User not found' }, { status: 404 }))
   }
-
-  if (user.accountType === 'user') {
-    await users.updateOne({ userId }, { $set: { accountType: 'admin' } })
-    return withCORS(NextResponse.json({ message: 'User role updated to admin' }, { status: 200 }))
-  }else {
-    await users.updateOne({ userId }, { $set: { accountType: 'user' } })
-    return withCORS(NextResponse.json({ message: 'User role updated to user' }, { status: 200 }))
+  const updatedRole = await users.updateOne(
+    { userId },
+    { $set: { accountType: roleName } }
+  )
+  if (updatedRole.modifiedCount === 0) {
+    return withCORS(NextResponse.json({ message: 'Role update failed' }, { status: 500 }))
   }
+  return withCORS(NextResponse.json({ message: 'Role updated successfully' }, { status: 200 }))
 }

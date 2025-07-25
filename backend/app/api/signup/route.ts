@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
     const parsed = registerSchema.parse(data)
-    const { email, password, accountType } = parsed
+    const { email, password, accountType, company } = parsed
 
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
       userId: uuidv4(),
       email:email.toLowerCase(),
       password: hashedPassword,
-      createdAt: new Date(),
-      accountType: accountType
+      accountType: accountType,
+      company: company,
+      createdAt: new Date()
     }
 
     const result = await users.insertOne(newUser)
