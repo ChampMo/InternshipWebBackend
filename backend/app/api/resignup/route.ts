@@ -28,13 +28,6 @@ export async function POST(req: NextRequest) {
     const db = client.db(process.env.MONGODB_DB)
     const users = db.collection('Users')
 
-    const existing = await users.findOne({ email:email.toLowerCase() })
-    if (existing) {
-      return withCORS(NextResponse.json(
-        { message: 'Email already registered' },
-        { status: 400 }
-      ))
-    }
     const generatePassword = () => {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let password = '';
@@ -57,12 +50,18 @@ export async function POST(req: NextRequest) {
       createdAt: new Date()
     }
 
-    const result = await users.insertOne(newUser)
+    const existingUser = await users.findOne({ email: email.toLowerCase() });
+
+    if (existingUser) {
+      await users.updateOne(
+        { email: email.toLowerCase() },
+        { $set: { password: hashedPassword, updatedAt: new Date() } }
+      );
+    }
     const resultmail = await sendAccount(email, password)
     return withCORS(NextResponse.json({
-      message: 'Registration successful',
-      sendMail: resultmail ? true : false,
-      id: result.insertedId
+      message: 'User registered successfully',
+      sendMail: resultmail ? true : false
     }))
   } catch (error: any) {
     return withCORS(NextResponse.json(
