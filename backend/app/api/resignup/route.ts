@@ -27,16 +27,7 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
     const users = db.collection('Users')
-    const roles = db.collection('Roles')
-    const companies = db.collection('Companys')
 
-    const existing = await users.findOne({ email:email.toLowerCase() })
-    if (existing) {
-      return withCORS(NextResponse.json(
-        { message: 'Email already registered' },
-        { status: 400 }
-      ))
-    }
     const generatePassword = () => {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let password = '';
@@ -50,37 +41,27 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const existingRole = await roles.findOne({ roleName: role })
-    if (!existingRole) {
-      return withCORS(NextResponse.json(
-        { message: 'Role not found' },
-        { status: 400 }
-      ))
-    }
-
-    const existingCompany = await companies.findOne({ companyName: company })
-    if (!existingCompany) {
-      return withCORS(NextResponse.json(
-        { message: 'Role not found' },
-        { status: 400 }
-      ))
-    }
-
     const newUser = {
       userId: uuidv4(),
       email:email.toLowerCase(),
       password: hashedPassword,
-      roleId: existingRole.roleId,
-      companyId: existingCompany.companyId,
+      role: role,
+      company: company,
       createdAt: new Date()
     }
 
-    const result = await users.insertOne(newUser)
+    const existingUser = await users.findOne({ email: email.toLowerCase() });
+
+    if (existingUser) {
+      await users.updateOne(
+        { email: email.toLowerCase() },
+        { $set: { password: hashedPassword, updatedAt: new Date() } }
+      );
+    }
     const resultmail = await sendAccount(email, password)
     return withCORS(NextResponse.json({
-      message: 'Registration successful',
-      sendMail: resultmail ? true : false,
-      id: result.insertedId
+      message: 'User registered successfully',
+      sendMail: resultmail ? true : false
     }))
   } catch (error: any) {
     return withCORS(NextResponse.json(

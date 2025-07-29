@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const db = client.db(process.env.MONGODB_DB)
   const users = db.collection('Users')
 
-  const user = await users.findOne({ email })
+  const user = await users.findOne({ email: email.toLowerCase() })
   if (!user) {
     return withCORS(NextResponse.json({ message: 'Invalid email' }, { status: 401 }))
   }
@@ -26,11 +26,19 @@ export async function POST(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'Invalid password' }, { status: 401 }))
   }
 
+  const roles = db.collection('Roles')
+  const role = await roles.findOne({ roleId: user.roleId })
+
+  if (!role) {
+    return withCORS(NextResponse.json({ message: 'Role not found' }, { status: 404 }))
+  }
+  user.role = role
+
   const token = signToken({ email: user.email, name: user.name })
 
   return withCORS(NextResponse.json({
     message: 'Login successful',
     token,
-    user: { name: user.name, email: user.email }
+    user
   }))
 }
