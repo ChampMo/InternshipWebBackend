@@ -26,6 +26,14 @@ export async function POST(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'Invalid password' }, { status: 401 }))
   }
 
+  const roles = db.collection('Roles')
+  const role = await roles.findOne({ roleId: user.roleId })
+
+  if (!role) {
+    return withCORS(NextResponse.json({ message: 'Role not found' }, { status: 404 }))
+  }
+  user.role = role
+
   const token = signToken({ email: user.email, name: user.name })
 
   return withCORS(NextResponse.json({

@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'This role name is already in use.' }, { status: 400 }))
   }
     const newRole = {
+        roleId: crypto.randomUUID(),
         roleName,
         jira: jira || false,
         cyberNews: cyberNews || false,
@@ -35,9 +36,7 @@ export async function POST(req: NextRequest) {
 }
 
 // get all roles
-export async function GET(req: NextRequest) {
-
-
+export async function GET() {
 
   const client = await clientPromise
   const db = client.db(process.env.MONGODB_DB)
@@ -49,9 +48,9 @@ export async function GET(req: NextRequest) {
 
 // delete a role
 export async function DELETE(req: NextRequest) {
-  const { roleName } = await req.json()
+  const { roleId } = await req.json()
 
-  if (!roleName) {
+  if (!roleId) {
     return withCORS(NextResponse.json({ message: 'Role name is required' }, { status: 400 }))
   }
 
@@ -59,19 +58,19 @@ export async function DELETE(req: NextRequest) {
   const db = client.db(process.env.MONGODB_DB)
   const roles = db.collection('Roles')
 
-  const role = await roles.findOne({ roleName })
+  const role = await roles.findOne({ roleId })
   if (!role) {
     return withCORS(NextResponse.json({ message: 'This role name is not found.' }, { status: 404 }))
   }
-  await roles.deleteOne({ roleName })
+  await roles.deleteOne({ roleId })
   return withCORS(NextResponse.json({ message: 'Role deleted successfully' }, { status: 200 }))
 }
 
 // update a role
 export async function PUT(req: NextRequest) {
-  const { roleName, jira, cyberNews, ti, admin } = await req.json()
+  const { roleId, roleName, jira, cyberNews, ti, admin } = await req.json()
 
-  if (!roleName) {
+  if (!roleId) {
     return withCORS(NextResponse.json({ message: 'Role name is not found' }, { status: 400 }))
   }
 
@@ -79,7 +78,7 @@ export async function PUT(req: NextRequest) {
   const db = client.db(process.env.MONGODB_DB)
   const roles = db.collection('Roles')
 
-  const role = await roles.findOne({ roleName })
+  const role = await roles.findOne({ roleId })
   if (!role) {
     return withCORS(NextResponse.json({ message: 'This role name is not found.' }, { status: 404 }))
   }
@@ -91,6 +90,6 @@ export async function PUT(req: NextRequest) {
         admin: admin,
         updatedAt: new Date()
     }
-    await roles.updateOne({ roleName }, { $set: updatedRole })
+    await roles.updateOne({ roleId }, { $set: updatedRole })
     return withCORS(NextResponse.json({ message: 'Role updated successfully' }, { status: 200 }))
 }

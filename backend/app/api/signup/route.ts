@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
     const users = db.collection('Users')
+    const roles = db.collection('Roles')
+    const companies = db.collection('Companys')
 
     const existing = await users.findOne({ email:email.toLowerCase() })
     if (existing) {
@@ -48,12 +50,28 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    const existingRole = await roles.findOne({ roleName: role })
+    if (!existingRole) {
+      return withCORS(NextResponse.json(
+        { message: 'Role not found' },
+        { status: 400 }
+      ))
+    }
+
+    const existingCompany = await companies.findOne({ companyName: company })
+    if (!existingCompany) {
+      return withCORS(NextResponse.json(
+        { message: 'Role not found' },
+        { status: 400 }
+      ))
+    }
+
     const newUser = {
       userId: uuidv4(),
       email:email.toLowerCase(),
       password: hashedPassword,
-      role: role,
-      company: company,
+      roleId: existingRole.roleId,
+      companyId: existingCompany.companyId,
       createdAt: new Date()
     }
 
