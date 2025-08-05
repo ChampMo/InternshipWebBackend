@@ -10,13 +10,12 @@ import { sendAccount } from '@/lib/account'
 import { send } from 'process'
 import { tr } from 'zod/v4/locales'
 
-// ✅ ตั้งค่าตรง origin ที่คุณอนุญาต (เช่นเฉพาะ frontend localhost)
 export function OPTIONS() {
   return withCORS(NextResponse.json({}, { status: 200 }))
 }
 
 
-// ✅ สำหรับ Register API (POST)
+// create a new user registration 
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
