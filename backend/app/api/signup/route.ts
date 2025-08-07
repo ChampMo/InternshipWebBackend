@@ -10,13 +10,12 @@ import { sendAccount } from '@/lib/account'
 import { send } from 'process'
 import { tr } from 'zod/v4/locales'
 
-// ✅ ตั้งค่าตรง origin ที่คุณอนุญาต (เช่นเฉพาะ frontend localhost)
 export function OPTIONS() {
   return withCORS(NextResponse.json({}, { status: 200 }))
 }
 
 
-// ✅ สำหรับ Register API (POST)
+// create a new user registration 
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
@@ -28,7 +27,7 @@ export async function POST(req: NextRequest) {
     const db = client.db(process.env.MONGODB_DB)
     const users = db.collection('Users')
     const roles = db.collection('Roles')
-    const companies = db.collection('Companys')
+    const companies = db.collection('Companies')
 
     const existing = await users.findOne({ email:email.toLowerCase() })
     if (existing) {
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
     };
 
     const password = generatePassword();
-
+    
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const existingRole = await roles.findOne({ roleName: role })
@@ -59,13 +58,13 @@ export async function POST(req: NextRequest) {
     }
 
     const existingCompany = await companies.findOne({ companyName: company })
+
     if (!existingCompany) {
       return withCORS(NextResponse.json(
         { message: 'Role not found' },
         { status: 400 }
       ))
     }
-
     const newUser = {
       userId: uuidv4(),
       email:email.toLowerCase(),
