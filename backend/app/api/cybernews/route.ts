@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import clientPromise from '@/lib/mongodb'
-import { withCORS } from '@/lib/cors'
+
 import { ObjectId } from 'mongodb'
+export function withCORS(res: NextResponse) {
+  res.headers.set('Access-Control-Allow-Origin', '*') // หรือระบุ origin ที่ต้องการ
+  res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return res
+}
 
 // ✅ GET: ดึงทั้งหมด
 export async function GET() {
@@ -19,10 +25,39 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    // ตรวจสอบและจัดรูปแบบ body ที่ต้องการ
+    const {
+      title,
+      tag,
+      Summary,
+      Detail,
+      Impact,
+      Advice,
+      NewsID,
+      imgUrl
+    } = body
+
+    if (!title || !tag || !Summary || !Detail || !Impact || !Advice || !NewsID || !imgUrl) {
+      return withCORS(NextResponse.json({ error: 'กรุณาระบุข้อมูลให้ครบถ้วน' }, { status: 400 }))
+    }
+
+    const newNews = {
+      title,
+      tag,
+      Summary,
+      Detail,
+      Impact,
+      Advice,
+      NewsID,
+      imgUrl,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
 
-    const result = await db.collection('Cyber news').insertOne(body)
+    const result = await db.collection('Cyber news').insertOne(newNews)
     return withCORS(NextResponse.json({ insertedId: result.insertedId }))
   } catch (e) {
     return withCORS(NextResponse.json({ error: 'ไม่สามารถเพิ่มข่าวได้' }, { status: 500 }))
@@ -41,6 +76,8 @@ export async function PUT(req: NextRequest) {
 
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
+
+    updateData.updatedAt = new Date()
 
     const result = await db.collection('Cyber news').updateOne(
       { _id: new ObjectId(id) },
