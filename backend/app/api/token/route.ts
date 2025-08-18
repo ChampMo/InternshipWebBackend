@@ -9,7 +9,7 @@ export function OPTIONS() {
 
 // create a new token
 export async function POST(req: NextRequest) {
-  const { token, name, type } = await req.json()
+  const { token, name, type, expiryDate } = await req.json()
 
   if (!token || !name || !type) {
     return withCORS(NextResponse.json({ message: 'All fields are required' }, { status: 400 }))
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     token,
     type,
     status: false,
+    expiryDate: new Date(expiryDate),
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -68,9 +69,9 @@ export async function DELETE(req: NextRequest) {
 
 // Update a token
 export async function PUT(req: NextRequest) {
-  const { tokenId, name, type } = await req.json()
+  const { tokenId, name, type, expiryDate } = await req.json()
 
-  if (!tokenId || !name || !type) {
+  if (!tokenId || !name || !type || !expiryDate) {
     return withCORS(NextResponse.json({ message: 'All fields are required' }, { status: 400 }))
   }
 
@@ -81,6 +82,7 @@ export async function PUT(req: NextRequest) {
   const updatedToken = {
     name,
     type,
+    expiryDate: new Date(expiryDate),
     updatedAt: new Date()
   }
 
