@@ -7,7 +7,7 @@ export function OPTIONS() {
 }
 // create a new company
 export async function POST(req: NextRequest) {
-  const { companyName } = await req.json()
+  const { companyName, companyKey} = await req.json()
 
   if (!companyName) {
     return withCORS(NextResponse.json({ message: 'Company name is required' }, { status: 400 }))
@@ -22,10 +22,11 @@ export async function POST(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'This company name is already in use.' }, { status: 400 }))
   }
     const newCompany = {
-        companyId: crypto.randomUUID(),
-        companyName,
-        createdAt: new Date(),
-        updatedAt: new Date()
+      companyId: crypto.randomUUID(),
+      companyName,
+      companyKey,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
     await companies.insertOne(newCompany)
     return withCORS(NextResponse.json({ message: 'Company created successfully' }, { status: 201 }))

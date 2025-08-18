@@ -4,18 +4,16 @@ import { withCORS } from '../../../../lib/cors'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { NewsID: string } }
+  context: any
 ) {
   try {
-    console.log('Received NewsID:', params.NewsID); // Debug log
+    const { params } = await context
+    const NewsID = params.NewsID
 
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
 
-    // ค้นหาข่าวโดยตรงด้วย string NewsID
-    const news = await db.collection('Cyber news').findOne({ NewsID: params.NewsID })
-
-    console.log('News found:', news); // Debug log
+    const news = await db.collection('Cyber news').findOne({ NewsID })
 
     if (!news) {
       return withCORS(
@@ -25,12 +23,12 @@ export async function GET(
 
     return withCORS(NextResponse.json(news))
   } catch (e) {
-    console.error('Error fetching news:', e)
     return withCORS(
       NextResponse.json({ error: 'เกิดข้อผิดพลาด' }, { status: 500 })
     )
   }
 }
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: { NewsID: string } }

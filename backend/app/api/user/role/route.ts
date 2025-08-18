@@ -35,15 +35,28 @@ export async function POST(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'Role created successfully' }, { status: 201 }))
 }
 
-// get all roles
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const roleId = searchParams.get('roleId')
 
   const client = await clientPromise
   const db = client.db(process.env.MONGODB_DB)
   const roles = db.collection('Roles')
 
-  const allRoles = await roles.find({}).toArray()
-  return withCORS(NextResponse.json(allRoles, { status: 200 }))
+  if (!roleId) {
+    // ถ้าไม่มี param จะคืน roles ทั้งหมด (เหมือนเดิม)
+    const allRoles = await roles.find({}).toArray()
+    return withCORS(NextResponse.json(allRoles, { status: 200 }))
+  }
+
+  // ถ้ามี roleId จะคืน role เดียว
+  const role = await roles.findOne({ roleId })
+  if (!role) {
+    return withCORS(NextResponse.json({ message: 'Role not found' }, { status: 404 }))
+  }
+
+  // ส่งข้อมูล role กลับ (สามารถปรับ field ได้ตามต้องการ)
+  return withCORS(NextResponse.json({ message: 'success', data: role }, { status: 200 }))
 }
 
 // delete a role

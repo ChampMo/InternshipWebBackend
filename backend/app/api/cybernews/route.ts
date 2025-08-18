@@ -15,7 +15,16 @@ export async function GET() {
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
     const news = await db.collection('Cyber news').find({}).toArray()
-    return withCORS(NextResponse.json(news))
+    const tags = await db.collection('Tags').find({}).toArray()
+    // map tagId => tagName
+    const tagMap = new Map<string, string>()
+    tags.forEach(tag => {
+      tagMap.set(tag.tagId, tag.tagName) // ใช้ tagId เป็น key
+    })
+    return withCORS(NextResponse.json(news.map(item => ({
+      ...item,
+      tag: tagMap.get(item.tag) || item.tag // แปลง tagId เป็น tagName
+    }))))
   } catch (e) {
     return withCORS(NextResponse.json({ error: 'เกิดข้อผิดพลาด' }, { status: 500 }))
   }
@@ -41,21 +50,26 @@ export async function POST(req: NextRequest) {
       return withCORS(NextResponse.json({ error: 'กรุณาระบุข้อมูลให้ครบถ้วน' }, { status: 400 }))
     }
 
-    const newNews = {
-      title,
-      tag,
-      Summary,
-      Detail,
-      Impact,
-      Advice,
-      NewsID,
-      imgUrl,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
+    const tags = await db.collection('Tags')
+    const tagDoc = await tags.findOne({ tagName: tag })
+      if (!tagDoc) {
+        return withCORS(NextResponse.json({ error: 'Tag not found' }, { status: 404 }))
+      }
+
+      const newNews = {
+        title,
+        tag: tagDoc.tagId, // หรือจะใช้ tagName ก็ได้
+        Summary,
+        Detail,
+        Impact,
+        Advice,
+        NewsID,
+        imgUrl,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
 
     const result = await db.collection('Cyber news').insertOne(newNews)
     return withCORS(NextResponse.json({ insertedId: result.insertedId }))
@@ -68,7 +82,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json()
-    const { id, ...updateData } = body
+    const { id, tag, ...updateData } = body
 
     if (!id) {
       return withCORS(NextResponse.json({ error: 'ต้องระบุ id' }, { status: 400 }))
@@ -77,6 +91,18 @@ export async function PUT(req: NextRequest) {
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
 
+    // ถ้า tag เป็นชื่อ tag (tagName) ให้แปลงเป็น tagId ก่อน
+    let tagId = tag
+    if (typeof tag === 'string' && tag.length && tag.length !== 36) { // สมมติ tagId เป็น uuid 36 ตัว
+      const tagsCol = await db.collection('Tags')
+      const tagDoc = await tagsCol.findOne({ tagName: tag })
+      if (!tagDoc) {
+        return withCORS(NextResponse.json({ error: 'Tag not found' }, { status: 404 }))
+      }
+      tagId = tagDoc.tagId
+    }
+
+    updateData.tag = tagId
     updateData.updatedAt = new Date()
 
     const result = await db.collection('Cyber news').updateOne(
