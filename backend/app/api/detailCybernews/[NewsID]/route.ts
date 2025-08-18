@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import clientPromise from '../../../../lib/mongodb'
 import { withCORS } from '../../../../lib/cors'
 
+
 export async function GET(
   req: NextRequest,
   context: any
@@ -21,7 +22,15 @@ export async function GET(
       )
     }
 
-    return withCORS(NextResponse.json(news))
+    // ดึง tag name จาก collection Tags
+    let tagName = null
+    if (news.tag) {
+      const tagDoc = await db.collection('Tags').findOne({ tagId: news.tag })
+      tagName = tagDoc?.tagName ?? null
+    }
+
+    // ส่ง tagName กลับไปด้วย
+    return withCORS(NextResponse.json({ ...news, tagName }))
   } catch (e) {
     return withCORS(
       NextResponse.json({ error: 'เกิดข้อผิดพลาด' }, { status: 500 })
