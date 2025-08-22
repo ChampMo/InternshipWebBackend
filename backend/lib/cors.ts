@@ -1,7 +1,7 @@
 // lib/cors.ts
 import { NextResponse } from 'next/server'
 
-const allowedOrigin = 'http://localhost:3000'
+const allowedOrigin = '*'
 
 export function withCORS(response: NextResponse): NextResponse {
   response.headers.set('Access-Control-Allow-Origin', allowedOrigin)
