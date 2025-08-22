@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import clientPromise from '../../../../lib/mongodb'
-import { withCORS } from '../../../../lib/cors'
+import clientPromise from '@/lib/mongodb'
+import { withCORS } from '@/lib/cors'
 
 
 export async function GET(

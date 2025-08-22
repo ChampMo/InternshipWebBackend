@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withCORS } from '@/lib/cors'
 import clientPromise from '@/lib/mongodb'
-
 import { ObjectId } from 'mongodb'
-export function withCORS(res: NextResponse) {
-  res.headers.set('Access-Control-Allow-Origin', '*') // หรือระบุ origin ที่ต้องการ
-  res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  return res
+
+
+export function OPTIONS() {
+  return withCORS(NextResponse.json({}, { status: 200 }))
 }
+
 
 // ✅ GET: ดึงทั้งหมด
 export async function GET() {
@@ -134,9 +134,4 @@ export async function DELETE(req: NextRequest) {
   } catch (e) {
     return withCORS(NextResponse.json({ error: 'ไม่สามารถลบข่าวได้' }, { status: 500 }))
   }
-}
-
-// ✅ OPTIONS: สำหรับ Preflight
-export function OPTIONS() {
-  return withCORS(NextResponse.json({}, { status: 200 }))
 }

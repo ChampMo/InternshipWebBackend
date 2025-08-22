@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withCORS } from '@/lib/cors'
 import clientPromise from '@/lib/mongodb'
 
-export function withCORS(res: NextResponse) {
-  res.headers.set('Access-Control-Allow-Origin', '*')
-  res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  return res
-}
+
 export function OPTIONS() {
   return withCORS(NextResponse.json({}, { status: 200 }))
 }
+
 
 // create a new tag
 export async function POST(req: NextRequest) {
