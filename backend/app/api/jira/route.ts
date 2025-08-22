@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const BASE_URL = process.env.BASE_URL
-    const USERNAME = process.env.USERNAME
+    const USERNAME = process.env.USERNAME_JIRA
 
     if (!BASE_URL || !USERNAME) {
     throw new Error('BASE_URL and USERNAME environment variables must be defined');
@@ -116,8 +116,14 @@ export async function GET(request: NextRequest) {
     const jiraUrl = `${BASE_URL}/rest/api/3/search?jql=project=${company?.companyKey}`
 
     const token = await tokens.findOne({ type: 'Jira', status:true })
+    console.log('Jira token:', token)
+
+    
     if (!token) {
         return withCORS(NextResponse.json({ message: 'Jira token not found' }, { status: 404 }))
+    }
+    if (token.expiryDate && new Date(token.expiryDate) < new Date()) {
+        return withCORS(NextResponse.json({ message: 'Jira token has expired' }, { status: 401 }))
     }
     const auth = Buffer.from(`${USERNAME}:${token?.token}`).toString('base64')
     const response = await fetch(jiraUrl, {
