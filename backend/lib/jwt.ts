@@ -1,20 +1,25 @@
 // lib/jwt.ts
-import jwt from 'jsonwebtoken'
+import jwt, { type SignOptions, type Secret, type JwtPayload } from 'jsonwebtoken'
 
-const secret: jwt.Secret = process.env.JWT_SECRET as string
+const secretEnv = process.env.JWT_SECRET
+if (!secretEnv) {
+  throw new Error('JWT_SECRET environment variable is not defined')
+}
+const secret: Secret = secretEnv
 
-if (!secret) {
-  throw new Error('JWT_SECRET environment variable is not defined');
+export function signToken(
+  payload: Record<string, unknown>,
+  // ใช้ชนิดตาม jsonwebtoken เพื่อไม่ให้ TS ฟ้อง
+  expiresIn: SignOptions['expiresIn'] = '7d'
+) {
+  const options: SignOptions = { expiresIn }
+  return jwt.sign(payload, secret, options)
 }
 
-export function signToken(payload: Record<string, any>, expiresIn: string = '7d') {
-  return jwt.sign(payload, secret, { expiresIn })
-}
-
-export function verifyToken(token: string): any {
+export function verifyToken<T extends object = JwtPayload>(token: string): T | null {
   try {
-    return jwt.verify(token, secret)
-  } catch (err) {
+    return jwt.verify(token, secret) as T
+  } catch {
     return null
   }
 }
