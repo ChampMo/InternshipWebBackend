@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
+  const { searchParams, pathname } = new URL(req.url)
   const roleId = searchParams.get('roleId')
 
   const client = await clientPromise
@@ -44,7 +44,13 @@ export async function GET(req: NextRequest) {
   const roles = db.collection('Roles')
 
   if (!roleId) {
-    // ถ้าไม่มี param จะคืน roles ทั้งหมด (เหมือนเดิม)
+    // ถ้า path มี /role/xxx (xxx ไม่ใช่ query param) ให้เช็คและตอบว่าไม่พบ RoleID
+    const pathParts = pathname.split('/').filter(Boolean)
+    const roleIndex = pathParts.indexOf('role')
+    if (roleIndex !== -1 && pathParts.length > roleIndex + 1) {
+      return withCORS(NextResponse.json({ message: 'ไม่พบ RoleID' }, { status: 404 }))
+    }
+    // ถ้าไม่มี param จะคืน roles ทั้งหมด
     const allRoles = await roles.find({}).toArray()
     return withCORS(NextResponse.json(allRoles, { status: 200 }))
   }
@@ -55,7 +61,6 @@ export async function GET(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'Role not found' }, { status: 404 }))
   }
 
-  // ส่งข้อมูล role กลับ (สามารถปรับ field ได้ตามต้องการ)
   return withCORS(NextResponse.json({ message: 'success', data: role }, { status: 200 }))
 }
 
