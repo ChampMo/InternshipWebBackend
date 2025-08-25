@@ -94,8 +94,8 @@ export async function GET(request: NextRequest) {
     const BASE_URL = process.env.BASE_URL
     const USERNAME = process.env.USERNAME_JIRA
 
-    if (!BASE_URL || !USERNAME) {
-    throw new Error('BASE_URL and USERNAME environment variables must be defined');
+    if (!BASE_URL || !USERNAME || !userId) {
+        throw new Error('BASE_URL, USERNAME, and userId must be defined');
     }
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
