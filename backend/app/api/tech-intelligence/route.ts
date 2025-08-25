@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
             || (vtData.data?.attributes?.whois?.match(/Country:\s*([A-Z]+)/)?.[1] ?? '-'),
         owner: vtData.data?.attributes?.as_owner || '-',
         reputation,
-        status: reputation > 0 ? 'Good' : 'Bad',
+        status: reputation > 4 ? 'Good' : 'Bad',
     })
   }
 
