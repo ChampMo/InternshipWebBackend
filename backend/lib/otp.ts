@@ -11,15 +11,12 @@ export const sendOTP = async (email: string) => {
   const otp = generateOTP()
   const expiresAt = new Date(Date.now() + 1000 * 60 * 15)
 
-  // ✅ บันทึก OTP ลงใน MongoDB (optional)
   const client = await clientPromise
   const db = client.db(process.env.MONGODB_DB)
   const otps = db.collection('OTPs')
 
-  // ลบ OTP เก่าของ email นี้ก่อน
   await otps.deleteMany({ email })
 
-  // บันทึก OTP ใหม่
   await otps.insertOne({
     email,
     otp,
@@ -27,16 +24,14 @@ export const sendOTP = async (email: string) => {
     createdAt: new Date()
   })
 
-  // ✅ สร้าง mail transporter
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // ex: your@gmail.com
+      user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     }
   })
 
-  // ✅ ตั้งค่า email
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
