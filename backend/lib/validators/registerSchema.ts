@@ -4,5 +4,5 @@ export const registerSchema = z.object({
   email: z.string().email(),
   role: z.string(),
   company: z.string(),
-  host: z.string().url()
+  host: z.string()
 })
