@@ -2,7 +2,7 @@
 import nodemailer from 'nodemailer'
 
 
-export const sendAccount = async (email: string, password:string) => {
+export const sendAccount = async (email: string, password:string, host:string) => {
 
 
   const transporter = nodemailer.createTransport({

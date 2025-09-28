@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
     const parsed = registerSchema.parse(data)
-    const { email, role, company } = parsed
+    const { email, role, company, host } = parsed
     console.log('Received registration data:',  email, role, company)
 
     const client = await clientPromise
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await users.insertOne(newUser)
-    const resultmail = await sendAccount(email, password)
+    const resultmail = await sendAccount(email, password, host)
     return withCORS(NextResponse.json({
       message: 'Registration successful',
       sendMail: resultmail ? true : false,
