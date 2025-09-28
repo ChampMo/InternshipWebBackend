@@ -285,7 +285,7 @@ export const sendAccount = async (email: string, password:string, host:string) =
                 </div>
                 
                 <div style="text-align: center;">
-                    <a href="#" class="cta-button">Access Your Account</a>
+                    <a href="${host}" class="cta-button">Access Your Account</a>
                 </div>
                 
                 <p>Best regards,<br>
