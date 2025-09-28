@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json()
     const parsed = registerSchema.parse(data)
-    const { email, role, company } = parsed
-    console.log('Received registration data:',  email, role, company)
+    const { email, role, company, host } = parsed
+    console.log('Received registration data:',  email, role, company, host)
 
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         { $set: { password: hashedPassword, updatedAt: new Date() } }
       );
     }
-    const resultmail = await sendAccount(email, password)
+    const resultmail = await sendAccount(email, password, host)
     return withCORS(NextResponse.json({
       message: 'User registered successfully',
       sendMail: resultmail ? true : false
