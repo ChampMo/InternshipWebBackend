@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
     const parsed = registerSchema.parse(data)
     const { email, role, company, host } = parsed
-    console.log('Received registration data:',  email, role, company)
 
     const client = await clientPromise
     const db = client.db(process.env.MONGODB_DB)
