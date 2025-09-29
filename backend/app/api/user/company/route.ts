@@ -82,6 +82,14 @@ export async function PUT(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'Company not found' }, { status: 404 }))
   }
 
+  // ตรวจสอบว่าชื่อ company ใหม่ซ้ำกับที่มีอยู่แล้วหรือไม่ (ยกเว้น company ปัจจุบัน)
+  if (companyName && companyName !== company.companyName) {
+    const existingCompany = await companies.findOne({ companyName })
+    if (existingCompany) {
+      return withCORS(NextResponse.json({ message: 'This company name is already in use.' }, { status: 400 }))
+    }
+  }
+
   await companies.updateOne(
     { companyId },
     { $set: { companyName, updatedAt: new Date() } }

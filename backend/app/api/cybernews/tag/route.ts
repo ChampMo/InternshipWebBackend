@@ -98,6 +98,14 @@ export async function PUT(req: NextRequest) {
     return withCORS(NextResponse.json({ message: 'Tag not found' }, { status: 404 }))
   }
 
+  // ตรวจสอบว่าชื่อ tag ใหม่ซ้ำกับที่มีอยู่แล้วหรือไม่ (ยกเว้น tag ปัจจุบัน)
+  if (tagName && tagName !== tag.tagName) {
+    const existingTag = await tags.findOne({ tagName })
+    if (existingTag) {
+      return withCORS(NextResponse.json({ message: 'This tag name is already in use.' }, { status: 400 }))
+    }
+  }
+
   await tags.updateOne(
     { tagId },
     { $set: { tagName, updatedAt: new Date() } }

@@ -100,6 +100,14 @@ export async function PUT(req: NextRequest) {
   if (!role) {
     return withCORS(NextResponse.json({ message: 'This role name is not found.' }, { status: 404 }))
   }
+
+  // ตรวจสอบว่าชื่อ role ใหม่ซ้ำกับที่มีอยู่แล้วหรือไม่ (ยกเว้น role ปัจจุบัน)
+  if (roleName && roleName !== role.roleName) {
+    const existingRole = await roles.findOne({ roleName })
+    if (existingRole) {
+      return withCORS(NextResponse.json({ message: 'This role name is already in use.' }, { status: 400 }))
+    }
+  }
     const updatedRole = {
         roleName,
         jira: jira,
