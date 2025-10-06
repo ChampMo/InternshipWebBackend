@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
         return withCORS(NextResponse.json({ message: 'Company not found' }, { status: 404 }))
     }
 
-    const jiraUrl = `${BASE_URL}/rest/api/3/search?jql=project=${company?.companyKey}`
+    const jiraUrl = `${BASE_URL}/rest/api/3/search/jql?jql=project=${company?.companyKey}`
 
     const token = await tokens.findOne({ type: 'Jira', status:true })
     console.log('Jira token:', token)
